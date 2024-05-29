@@ -1,0 +1,18 @@
+[[language]]
+name = "rust"
+auto-format = true
+#
+[language-server.rust-analyzer]
+config = { checkOnSave = { command = "clippy" }, cargo = { allFeatures = true }}
+
+[language.debugger]
+name = "lldb-vscode"
+transport = "stdio"
+command = "lldb-vscode"
+
+[[language.debugger.templates]]
+name = "binary"
+request = "launch"
+completion = [ { name = "binary", completion = "filename" } ]
+args = { program = "{0}" }
+
