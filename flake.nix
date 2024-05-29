@@ -47,6 +47,7 @@
         packages.default = self'.packages.webbed_site;
 
         devShells.default = pkgs.mkShell {
+          packages = with pkgs; [sqlx-cli];
           inputsFrom = [
             config.treefmt.build.devShell
             self'.devShells.webbed_site
