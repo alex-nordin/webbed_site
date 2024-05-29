@@ -44,12 +44,12 @@
           };
         };
 
-        packages.default = self'.packages.leptos-fullstack;
+        packages.default = self'.packages.webbed_site;
 
         devShells.default = pkgs.mkShell {
           inputsFrom = [
             config.treefmt.build.devShell
-            self'.devShells.leptos-fullstack
+            self'.devShells.webbed_site
           ];
           nativeBuildInputs = with pkgs; [
             just

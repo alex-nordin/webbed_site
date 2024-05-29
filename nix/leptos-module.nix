@@ -22,15 +22,15 @@ in {
         ...
       }: {
         options = {
-          leptos-fullstack.overrideCraneArgs = lib.mkOption {
+          webbed_site.overrideCraneArgs = lib.mkOption {
             type = lib.types.functionTo lib.types.attrs;
             default = _: {};
-            description = "Override crane args for the leptos-fullstack package";
+            description = "Override crane args for the webbed_site package";
           };
 
-          leptos-fullstack.rustToolchain = lib.mkOption {
+          webbed_site.rustToolchain = lib.mkOption {
             type = lib.types.package;
-            description = "Rust toolchain to use for the leptos-fullstack package";
+            description = "Rust toolchain to use for the webbed_site package";
             default = (pkgs.rust-bin.fromRustupToolchainFile (self + /rust-toolchain.toml)).override {
               extensions = [
                 "rust-src"
@@ -40,14 +40,14 @@ in {
             };
           };
 
-          leptos-fullstack.craneLib = lib.mkOption {
+          webbed_site.craneLib = lib.mkOption {
             type = lib.types.lazyAttrsOf lib.types.raw;
-            default = (inputs.crane.mkLib pkgs).overrideToolchain config.leptos-fullstack.rustToolchain;
+            default = (inputs.crane.mkLib pkgs).overrideToolchain config.webbed_site.rustToolchain;
           };
 
-          leptos-fullstack.src = lib.mkOption {
+          webbed_site.src = lib.mkOption {
             type = lib.types.path;
-            description = "Source directory for the leptos-fullstack package";
+            description = "Source directory for the webbed_site package";
             # When filtering sources, we want to allow assets other than .rs files
             # TODO: Don't hardcode these!
             default = lib.cleanSourceWith {
@@ -61,14 +61,14 @@ in {
                 || (lib.hasInfix "/css/" path)
                 ||
                 # Default filter from crane (allow .rs files)
-                (config.leptos-fullstack.craneLib.filterCargoSources path type);
+                (config.webbed_site.craneLib.filterCargoSources path type);
             };
           };
         };
         config = let
           cargoToml = builtins.fromTOML (builtins.readFile (self + /Cargo.toml));
           inherit (cargoToml.package) name version;
-          inherit (config.leptos-fullstack) rustToolchain craneLib src;
+          inherit (config.webbed_site) rustToolchain craneLib src;
 
           # Crane builder for cargo-leptos projects
           craneBuild = rec {
@@ -100,7 +100,7 @@ in {
                     --set LEPTOS_SITE_ROOT $out/bin/site
                 '';
               };
-            package = craneLib.buildPackage (buildArgs // config.leptos-fullstack.overrideCraneArgs buildArgs);
+            package = craneLib.buildPackage (buildArgs // config.webbed_site.overrideCraneArgs buildArgs);
 
             check = craneLib.cargoClippy (args
               // {
