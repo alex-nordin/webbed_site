@@ -87,8 +87,8 @@ in {
               args
               // {
                 inherit cargoArtifacts;
-                buildPhaseCargoCommand = "cargo leptos build --release -vvv";
-                cargoTestCommand = "cargo leptos test --release -vvv";
+                buildPhaseCargoCommand = "cargo leptos build --release";
+                cargoTestCommand = "cargo leptos test --release";
                 nativeBuildInputs = [
                   pkgs.makeWrapper
                 ];
