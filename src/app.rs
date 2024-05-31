@@ -1,13 +1,13 @@
-use std::ops::Add;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::error_template::{AppError, ErrorTemplate};
 use html::Input;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-// use malachite::num::conversion::string::options::ToSciOptions;
-// use malachite::num::conversion::traits::ToSci;
-// use malachite::Natural;
+use malachite::num::conversion::string::options::ToSciOptions;
+use malachite::num::conversion::traits::ToSci;
+use malachite::Natural;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -76,26 +76,73 @@ pub fn NavBar() -> impl IntoView {
     }
 }
 
-#[server(CalcFib, "/api")]
-pub async fn calc_fib(input: String) -> Result<u128, ServerFnError> {
-    fn fib_memo(n: u128, memo: &mut [u128; 2]) -> u128 {
-        let [a, b] = *memo;
-        let c = a.saturating_add(b);
+// #[server(CalcFib, "/api")]
+// pub async fn calc_fib(input: String) -> Result<u128, ServerFnError> {
+//     fn fib_memo(n: u128, memo: &mut [u128; 2]) -> u128 {
+//         let [a, b] = *memo;
+//         let c = a.saturating_add(b);
 
-        if n == 0 {
-            c
+//         if n == 0 {
+//             c
+//         } else {
+//             *memo = [b, c];
+//             fib_memo(n - 1, memo)
+//         }
+//     }
+
+//     let target: u128 = input.parse().unwrap_or_default();
+
+//     if target < 2 {
+//         Ok(1)
+//     } else {
+//         Ok(fib_memo(target - 2, &mut [0, 1]))
+//     }
+// }
+
+#[server(CalcFib, "/api")]
+pub async fn calc_fib(input: String) -> Result<String, ServerFnError> {
+    const MAX_RECURSION: usize = 4000;
+    static FN_CALLS: AtomicUsize = AtomicUsize::new(0);
+
+    fn fib_memo(n: usize, memo: &mut [Natural; 2]) -> Result<Natural, ServerFnError> {
+        let lim = FN_CALLS.fetch_add(1, Ordering::Relaxed);
+        if lim >= MAX_RECURSION {
+            FN_CALLS.store(0, Ordering::Relaxed);
+            Err(ServerFnError::new(
+                "Max recursion limit reached. Aborting to avoid stack overflow",
+            ))
         } else {
-            *memo = [b, c];
-            fib_memo(n - 1, memo)
+            let a = &memo[0];
+            let b = &memo[1];
+            let c = a + b;
+
+            if n == 0 {
+                FN_CALLS.store(0, Ordering::Relaxed);
+                Ok(c)
+            } else {
+                *memo = [b.clone(), c];
+                // println!("{:?}", FN_CALLS);
+                fib_memo(n - 1, memo)
+            }
         }
     }
 
-    let target: u128 = input.parse().unwrap_or_default();
+    let mut options = ToSciOptions::default();
+    options.set_precision(30);
+    // let what = res.to_sci_with_options(options).to_string();
+    // println!("{}", res.to_sci_with_options(options));
+    let target: usize = input.parse().unwrap_or_default();
 
     if target < 2 {
-        Ok(1)
+        let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
+        Ok(fib)
     } else {
-        Ok(fib_memo(target - 2, &mut [0, 1]))
+        let zero = Natural::from(0u32);
+        let one = Natural::from(1u32);
+        match fib_memo(target - 2, &mut [zero, one]) {
+            Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -121,17 +168,26 @@ pub fn Fib() -> impl IntoView {
 
             Submit
         </button>
+        // <p>
+        // The result was:
+        // {move || if action.value().get().is_none() {
+        //     "Nothing right now".to_string()
+        // } else if action.value().get().is_some() {
+        //     let final_fib = action.value().get().unwrap().unwrap();
+        //     {final_fib}
+        // } else {
+        //     format!("{:?}", "shit".to_string())
+        // }
+        // }
+        //     </p>
+        <Transition>
         <p>
-        The result was:
-        {move || if action.value().get().is_none() {
-            "Nothing right now".to_string()
-        } else if action.value().get().is_some() {
-            let eeg = action.value().get().unwrap().unwrap();
-            format!("{}", eeg)
-        } else {
-            format!("{:?}", "shit".to_string())
-        }
-        }
-            </p>
+        The result::
+        {move || match action.value().get() {
+            Some(val) => val.unwrap_or("Possible recursion limit reached".to_string()),
+            None => "Nothing right now".to_string(),
+        }}
+        </p>
+        </Transition>
     }
 }
