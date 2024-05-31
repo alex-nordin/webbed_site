@@ -119,6 +119,9 @@ pub async fn calc_fib(input: String) -> Result<String, ServerFnError> {
             if n == 0 {
                 FN_CALLS.store(0, Ordering::Relaxed);
                 Ok(c)
+            } else if n == 1 {
+                FN_CALLS.store(0, Ordering::Relaxed);
+                Ok(a.clone())
             } else {
                 *memo = [b.clone(), c];
                 // println!("{:?}", FN_CALLS);
