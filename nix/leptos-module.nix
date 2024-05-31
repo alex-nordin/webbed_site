@@ -87,14 +87,15 @@ in {
               args
               // {
                 inherit cargoArtifacts;
+                cargoExtraArgs = "";
                 buildPhaseCargoCommand = "cargo leptos build --release";
-                cargoTestCommand = "cargo leptos test --release";
+                cargoTestCommand = "cargo leptos test --release -v";
                 nativeBuildInputs = [
                   pkgs.makeWrapper
                 ];
                 installPhaseCommand = ''
                   mkdir -p $out/bin
-                  cp target/server/release/${name} $out/bin/
+                  cp target/release/${name} $out/bin/
                   cp -r target/site $out/bin/
                   wrapProgram $out/bin/${name} \
                     --set LEPTOS_SITE_ROOT $out/bin/site
