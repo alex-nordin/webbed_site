@@ -1,5 +1,3 @@
-use std::sync::atomic::{AtomicUsize, Ordering};
-
 use crate::error_template::{AppError, ErrorTemplate};
 use html::Input;
 use leptos::*;
@@ -99,55 +97,116 @@ pub fn NavBar() -> impl IntoView {
 //     }
 // }
 
+// #[server(CalcFib, "/api")]
+// pub async fn calc_fib(input: String) -> Result<String, ServerFnError> {
+//     const MAX_RECURSION: usize = 4000;
+//     static FN_CALLS: AtomicUsize = AtomicUsize::new(0);
+
+//     fn fib_memo(n: usize, memo: &mut [Natural; 2]) -> Result<Natural, ServerFnError> {
+//         let lim = FN_CALLS.fetch_add(1, Ordering::Relaxed);
+//         if lim >= MAX_RECURSION {
+//             FN_CALLS.store(0, Ordering::Relaxed);
+//             Err(ServerFnError::new(
+//                 "Max recursion limit reached. Aborting to avoid stack overflow",
+//             ))
+//         } else {
+//             let a = &memo[0];
+//             let b = &memo[1];
+//             let c = a + b;
+
+//             if n == 0 {
+//                 FN_CALLS.store(0, Ordering::Relaxed);
+//                 Ok(c)
+//             } else if n == 1 {
+//                 FN_CALLS.store(0, Ordering::Relaxed);
+//                 Ok(a.clone())
+//             } else {
+//                 *memo = [b.clone(), c];
+//                 // println!("{:?}", FN_CALLS);
+//                 fib_memo(n - 1, memo)
+//             }
+//         }
+//     }
+
+//     let mut options = ToSciOptions::default();
+//     options.set_precision(30);
+//     // let what = res.to_sci_with_options(options).to_string();
+//     // println!("{}", res.to_sci_with_options(options));
+//     let target: usize = input.parse().unwrap_or_default();
+
+//     if target < 2 {
+//         let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
+//         Ok(fib)
+//     } else {
+//         let zero = Natural::from(0u32);
+//         let one = Natural::from(1u32);
+//         match fib_memo(target - 2, &mut [zero, one]) {
+//             Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
+//             Err(e) => Err(e),
+//         }
+//     }
+// }
+
 #[server(CalcFib, "/api")]
-pub async fn calc_fib(input: String) -> Result<String, ServerFnError> {
-    const MAX_RECURSION: usize = 4000;
-    static FN_CALLS: AtomicUsize = AtomicUsize::new(0);
+pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
+    struct Fibonacci {
+        a: Natural,
+        b: Natural,
+    }
 
-    fn fib_memo(n: usize, memo: &mut [Natural; 2]) -> Result<Natural, ServerFnError> {
-        let lim = FN_CALLS.fetch_add(1, Ordering::Relaxed);
-        if lim >= MAX_RECURSION {
-            FN_CALLS.store(0, Ordering::Relaxed);
-            Err(ServerFnError::new(
-                "Max recursion limit reached. Aborting to avoid stack overflow",
-            ))
-        } else {
-            let a = &memo[0];
-            let b = &memo[1];
-            let c = a + b;
-
-            if n == 0 {
-                FN_CALLS.store(0, Ordering::Relaxed);
-                Ok(c)
-            } else if n == 1 {
-                FN_CALLS.store(0, Ordering::Relaxed);
-                Ok(a.clone())
-            } else {
-                *memo = [b.clone(), c];
-                // println!("{:?}", FN_CALLS);
-                fib_memo(n - 1, memo)
+    impl Fibonacci {
+        fn new() -> Self {
+            Fibonacci {
+                a: Natural::from(1u32),
+                b: Natural::from(0u32),
+                // cache: [Natural::from(0u32), Natural::from(1u32)],
             }
         }
     }
 
-    let mut options = ToSciOptions::default();
-    options.set_precision(30);
-    // let what = res.to_sci_with_options(options).to_string();
-    // println!("{}", res.to_sci_with_options(options));
-    let target: usize = input.parse().unwrap_or_default();
+    impl Iterator for Fibonacci {
+        type Item = Natural;
 
-    if target < 2 {
-        let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
-        Ok(fib)
-    } else {
-        let zero = Natural::from(0u32);
-        let one = Natural::from(1u32);
-        match fib_memo(target - 2, &mut [zero, one]) {
-            Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
-            Err(e) => Err(e),
+        fn next(&mut self) -> Option<Self::Item> {
+            let res = self.b.clone();
+            // mem::swap(&mut self.b, &mut self.a);
+            // self.a += &res;
+            // let r = &mut self.b;
+            self.b = self.a.clone();
+            self.a += res.clone();
+
+            Some(res)
         }
     }
+    let target: usize = input.parse().unwrap_or_default();
+    let mut options = ToSciOptions::default();
+    options.set_precision(30);
+    let fib_iterator = Fibonacci::new().nth(target);
+    if let Some(f) = fib_iterator {
+        Ok(f.to_sci_with_options(options).to_string())
+    } else {
+        Err(ServerFnError::new("Issue with iterator".to_string()))
+    }
 }
+
+//     let mut options = ToSciOptions::default();
+//     options.set_precision(30);
+//     // let what = res.to_sci_with_options(options).to_string();
+//     // println!("{}", res.to_sci_with_options(options));
+//     let target: usize = input.parse().unwrap_or_default();
+
+//     if target < 2 {
+//         let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
+//         Ok(fib)
+//     } else {
+//         let zero = Natural::from(0u32);
+//         let one = Natural::from(1u32);
+//         match fib_memo(target - 2, &mut [zero, one]) {
+//             Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
+//             Err(e) => Err(e),
+//         }
+//     }
+// }
 
 #[component]
 pub fn Fib() -> impl IntoView {
@@ -183,11 +242,11 @@ pub fn Fib() -> impl IntoView {
         // }
         // }
         //     </p>
-        <Transition>
+        <Transition fallback=move || view! { <p>"Loading..."</p>}>
         <p>
         The result::
-        {move || match action.value().get() {
-            Some(val) => val.unwrap_or("Possible recursion limit reached".to_string()),
+        {move || match action.value().get(){
+            Some(val) => val.unwrap_or("Couldn't generate fibonacci number".to_string()),
             None => "Nothing right now".to_string(),
         }}
         </p>
