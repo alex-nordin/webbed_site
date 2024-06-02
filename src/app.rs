@@ -34,7 +34,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <NavBar/>
                 <Routes>
-                    <Route path="/home" view=Home/>
+                    <Route path="" view=Home/>
                     <Route path="/fib" view=Fib/>
                 </Routes>
             </main>
@@ -68,7 +68,7 @@ fn Home() -> impl IntoView {
 pub fn NavBar() -> impl IntoView {
     view! {
         <nav class="bg-gray-200 shadow shadow-gray-300 w-100 px-8 md:px-auto space-x-4 justify-between">
-            <A href="home">"Home"</A>
+            <A href="">"Home"</A>
             <A href="fib">"Fib"</A>
         </nav>
     }
