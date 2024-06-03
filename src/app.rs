@@ -74,79 +74,6 @@ pub fn NavBar() -> impl IntoView {
     }
 }
 
-// #[server(CalcFib, "/api")]
-// pub async fn calc_fib(input: String) -> Result<u128, ServerFnError> {
-//     fn fib_memo(n: u128, memo: &mut [u128; 2]) -> u128 {
-//         let [a, b] = *memo;
-//         let c = a.saturating_add(b);
-
-//         if n == 0 {
-//             c
-//         } else {
-//             *memo = [b, c];
-//             fib_memo(n - 1, memo)
-//         }
-//     }
-
-//     let target: u128 = input.parse().unwrap_or_default();
-
-//     if target < 2 {
-//         Ok(1)
-//     } else {
-//         Ok(fib_memo(target - 2, &mut [0, 1]))
-//     }
-// }
-
-// #[server(CalcFib, "/api")]
-// pub async fn calc_fib(input: String) -> Result<String, ServerFnError> {
-//     const MAX_RECURSION: usize = 4000;
-//     static FN_CALLS: AtomicUsize = AtomicUsize::new(0);
-
-//     fn fib_memo(n: usize, memo: &mut [Natural; 2]) -> Result<Natural, ServerFnError> {
-//         let lim = FN_CALLS.fetch_add(1, Ordering::Relaxed);
-//         if lim >= MAX_RECURSION {
-//             FN_CALLS.store(0, Ordering::Relaxed);
-//             Err(ServerFnError::new(
-//                 "Max recursion limit reached. Aborting to avoid stack overflow",
-//             ))
-//         } else {
-//             let a = &memo[0];
-//             let b = &memo[1];
-//             let c = a + b;
-
-//             if n == 0 {
-//                 FN_CALLS.store(0, Ordering::Relaxed);
-//                 Ok(c)
-//             } else if n == 1 {
-//                 FN_CALLS.store(0, Ordering::Relaxed);
-//                 Ok(a.clone())
-//             } else {
-//                 *memo = [b.clone(), c];
-//                 // println!("{:?}", FN_CALLS);
-//                 fib_memo(n - 1, memo)
-//             }
-//         }
-//     }
-
-//     let mut options = ToSciOptions::default();
-//     options.set_precision(30);
-//     // let what = res.to_sci_with_options(options).to_string();
-//     // println!("{}", res.to_sci_with_options(options));
-//     let target: usize = input.parse().unwrap_or_default();
-
-//     if target < 2 {
-//         let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
-//         Ok(fib)
-//     } else {
-//         let zero = Natural::from(0u32);
-//         let one = Natural::from(1u32);
-//         match fib_memo(target - 2, &mut [zero, one]) {
-//             Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
-//             Err(e) => Err(e),
-//         }
-//     }
-// }
-
 #[server(CalcFib, "/api")]
 pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
     struct Fibonacci {
@@ -159,7 +86,6 @@ pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
             Fibonacci {
                 a: Natural::from(1u32),
                 b: Natural::from(0u32),
-                // cache: [Natural::from(0u32), Natural::from(1u32)],
             }
         }
     }
@@ -169,9 +95,6 @@ pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
 
         fn next(&mut self) -> Option<Self::Item> {
             let res = self.b.clone();
-            // mem::swap(&mut self.b, &mut self.a);
-            // self.a += &res;
-            // let r = &mut self.b;
             self.b = self.a.clone();
             self.a += res.clone();
 
@@ -188,25 +111,6 @@ pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
         Err(ServerFnError::new("Issue with iterator".to_string()))
     }
 }
-
-//     let mut options = ToSciOptions::default();
-//     options.set_precision(30);
-//     // let what = res.to_sci_with_options(options).to_string();
-//     // println!("{}", res.to_sci_with_options(options));
-//     let target: usize = input.parse().unwrap_or_default();
-
-//     if target < 2 {
-//         let fib = Natural::from(1u32).to_sci_with_options(options).to_string();
-//         Ok(fib)
-//     } else {
-//         let zero = Natural::from(0u32);
-//         let one = Natural::from(1u32);
-//         match fib_memo(target - 2, &mut [zero, one]) {
-//             Ok(f) => Ok(f.to_sci_with_options(options).to_string()),
-//             Err(e) => Err(e),
-//         }
-//     }
-// }
 
 #[component]
 pub fn Fib() -> impl IntoView {
@@ -230,18 +134,6 @@ pub fn Fib() -> impl IntoView {
 
             Submit
         </button>
-        // <p>
-        // The result was:
-        // {move || if action.value().get().is_none() {
-        //     "Nothing right now".to_string()
-        // } else if action.value().get().is_some() {
-        //     let final_fib = action.value().get().unwrap().unwrap();
-        //     {final_fib}
-        // } else {
-        //     format!("{:?}", "shit".to_string())
-        // }
-        // }
-        //     </p>
         <Transition fallback=move || view! { <p>"Loading..."</p>}>
         <p>
         The result::
