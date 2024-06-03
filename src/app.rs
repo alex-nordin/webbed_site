@@ -121,12 +121,16 @@ pub fn Fib() -> impl IntoView {
     let action = create_server_action::<CalcFib>();
 
     view! {
-        <h3>Using <code>create_action</code></h3>
+        <div class="mt-20">
+        <h3 class="text-center">Using <code>create_action</code></h3>
+        <div class="grid justify-center mt-5">
         // <p>
         // "Some server functions are conceptually \"mutations,\", which change something on the server. "
         // "These often work well as actions."
         // </p>
+        <div class="flex justify-center">
         <input node_ref=input_ref placeholder="Give me an Integer"/>
+
         <button on:click=move |_| {
             let text = input_ref.get().unwrap().value();
             action.dispatch(text.into());
@@ -134,6 +138,8 @@ pub fn Fib() -> impl IntoView {
 
             Submit
         </button>
+        </div>
+
         <Transition fallback=move || view! { <p>"Loading..."</p>}>
         <p>
         The result::
@@ -143,5 +149,7 @@ pub fn Fib() -> impl IntoView {
         }}
         </p>
         </Transition>
+        </div>
+        </div>
     }
 }
