@@ -134,7 +134,7 @@ pub fn Fib() -> impl IntoView {
         <button on:click=move |_| {
             let text = input_ref.get().unwrap().value();
             action.dispatch(text.into());
-        }>
+        } class="btn">
 
             Submit
         </button>
