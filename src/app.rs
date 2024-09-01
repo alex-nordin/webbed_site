@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use crate::error_template::{AppError, ErrorTemplate};
 use html::Input;
 use leptos::*;
@@ -97,29 +99,36 @@ pub fn NavBar() -> impl IntoView {
 
 #[server(CalcFib, "/api")]
 pub async fn calc_fib_iter(input: String) -> Result<String, ServerFnError> {
+    use std::collections::VecDeque;
+
     struct Fibonacci {
-        a: Natural,
-        b: Natural,
+        // pre_one: Cell<Natural>,
+        // pre_two: Cell<Natural>,
+        stack: VecDeque<Natural>,
     }
 
     impl Fibonacci {
         fn new() -> Self {
-            Fibonacci {
-                a: Natural::from(1u32),
-                b: Natural::from(0u32),
-            }
+            let zero = Natural::from(0u32);
+            let one = Natural::from(1u32);
+            let stack = VecDeque::from([zero, one]);
+            Fibonacci { stack }
         }
     }
 
     impl Iterator for Fibonacci {
         type Item = Natural;
 
+        // take the sum of the preceding two numbers in the sequence, and update the stack for the next iteration so that we only ever keep the two preceding values to N
         fn next(&mut self) -> Option<Self::Item> {
-            let res = self.b.clone();
-            self.b = self.a.clone();
-            self.a += res.clone();
-
-            Some(res)
+            let preceding_one = self
+                .stack
+                .pop_front()
+                .expect("Failed to pop front of stack");
+            let preceding_two = self.stack.front().expect("Nothing at index 0");
+            let sum = preceding_one + preceding_two;
+            self.stack.push_back(sum.clone());
+            Some(sum)
         }
     }
     let target: usize = input.parse().unwrap_or_default();
